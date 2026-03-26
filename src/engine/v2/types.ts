@@ -11,11 +11,17 @@ export type HealthCondition =
   | 'Pregnancy'
   | 'Post-Surgical'
   | 'Balance Issues'
-  | 'Undiagnosed Severe Pain';
+  | 'Undiagnosed Severe Pain'
+  | 'Shoulder Pain'
+  | 'Knee Pain'
+  | 'Hip Pain'
+  | 'Low Back Pain'
+  | 'No Floor Work'          // User preference
+  | 'Machine Only Preference'; // User preference
 
 export type PreferenceLevel = 'LOW' | 'MED' | 'HIGH';
 export type Environment = 'GYM' | 'HOME' | 'CLASS';
-export type Goal = 'HYPERTROPHY' | 'CARDIO' | 'MOBILITY' | 'BALANCE' | 'WEIGHT_LOSS' | 'ATHLETIC';
+export type Goal = 'HYPERTROPHY' | 'CARDIO' | 'MOBILITY' | 'BALANCE' | 'WEIGHT_LOSS' | 'ATHLETIC' | 'GENERAL_STRENGTH';
 
 export interface UserIdentity {
   firstName: string;
@@ -23,7 +29,33 @@ export interface UserIdentity {
   email: string;
 }
 
+/**
+ * MARCH 26TH UPDATE: 
+ * Extending original v2 survey with functional gating questions.
+ */
 export interface SurveyInputV2 {
+  // Functional Gating (Section 3B/3C)
+  walkingAid: boolean;               
+  fallsHistory: 'NONE' | 'ONE_NO_INJURY' | 'TWO_OR_INJURY'; 
+  chairRiseDifficulty: boolean;      
+  floorTransferDifficulty: boolean;  
+  unsteadyGait: boolean;             
+  dizziness: boolean;                
+  breathlessLightActivity: boolean;   
+  walking10MinContinuous: boolean;   
+  strengthHistory: 'NONE' | 'LOW' | 'HIGH'; 
+  daysPerWeek: 2 | 3 | 4;            
+
+  // Medical Flags (Section 3A)
+  doctorSaysSupervision: boolean;
+  chestPainRecent: boolean;
+  uncontrolledConditions: boolean;
+  recentSurgeryNotCleared: boolean;
+  repeatedFallsInjury: boolean;       
+  severePainDaily: boolean;
+  neuroConditionUnchecked: boolean;
+
+  // General Inputs (Original V2)
   conditions: HealthCondition[];
   environments: Environment[];
   goals: Goal[];
@@ -33,6 +65,15 @@ export interface SurveyInputV2 {
   identity?: Partial<UserIdentity>;
 }
 
+export type RiskLevel = 'BLACK' | 'RED' | 'AMBER' | 'GREEN';
+export type ModifierTag = 
+  | 'MOD-SHOULDER' | 'MOD-KNEE' | 'MOD-HIP' | 'MOD-LOWBACK' 
+  | 'MOD-BALANCE' | 'MOD-CARDIOLOW' | 'MOD-DECONDITIONED' 
+  | 'MOD-OSTEOARTHRITIS' | 'MOD-NEURO' | 'MOD-OSTEOPOROSIS' 
+  | 'MOD-DIZZINESS' | 'MOD-HIGHBMI' | 'MOD-BEGINNER' 
+  | 'MOD-MACHINE-ONLY' | 'MOD-NO-FLOOR' | 'MOD-NO-OVERHEAD' 
+  | 'MOD-SIT-TO-STAND-ASSIST' | 'MANUAL-REVIEW' | 'REFERRAL-GP';
+
 export interface ProgramScore {
   code: string;
   name: string;
@@ -41,10 +82,12 @@ export interface ProgramScore {
   finalScore: number;
   banned: boolean;
   bannedReasons: string[];
-  explainLog: string[]; // e.g. ["+10 for Hypertrophy Goal", "-5 for High Impact Request"]
+  explainLog: string[];
+  
+  // MERGED Production Fields
+  modifiers: ModifierTag[];
+  swaps: Record<string, string>;
 }
-
-export type RiskLevel = 'BLACK' | 'RED' | 'AMBER' | 'GREEN';
 
 export const CONDITION_RISK_MAP: Record<HealthCondition, RiskLevel> = {
   'Undiagnosed Severe Pain': 'BLACK',
@@ -60,6 +103,35 @@ export const CONDITION_RISK_MAP: Record<HealthCondition, RiskLevel> = {
   'Pregnancy': 'AMBER',
   'Post-Surgical': 'AMBER',
   'Balance Issues': 'AMBER',
+  'Shoulder Pain': 'GREEN',
+  'Knee Pain': 'GREEN',
+  'Hip Pain': 'GREEN',
+  'Low Back Pain': 'GREEN',
+  'No Floor Work': 'GREEN',
+  'Machine Only Preference': 'GREEN',
+};
+
+// Map conditions to modifiers (Section 4)
+export const CONDITION_MODIFIER_MAP: Record<HealthCondition, ModifierTag[]> = {
+  'Shoulder Pain': ['MOD-SHOULDER', 'MOD-NO-OVERHEAD'],
+  'Knee Pain': ['MOD-KNEE'],
+  'Hip Pain': ['MOD-HIP'],
+  'Low Back Pain': ['MOD-LOWBACK'],
+  'Lumbar Herniation': ['MOD-LOWBACK'],
+  'Osteoarthritis': ['MOD-OSTEOARTHRITIS'],
+  'Osteoporosis': ['MOD-OSTEOPOROSIS'],
+  'Neuropathy': ['MOD-NEURO'],
+  'No Floor Work': ['MOD-NO-FLOOR'],
+  'Machine Only Preference': ['MOD-MACHINE-ONLY'],
+  'Hypertension': [],
+  'Heart Condition': [],
+  'POTS': [],
+  'COPD': ['MOD-CARDIOLOW'],
+  'Glaucoma': [],
+  'Pregnancy': [],
+  'Post-Surgical': [],
+  'Balance Issues': ['MOD-BALANCE'],
+  'Undiagnosed Severe Pain': [],
 };
 
 export interface ProgramMaster {
@@ -67,12 +139,8 @@ export interface ProgramMaster {
   name: string;
   trainerizeId: string;
   description: string;
-  riskLevel: RiskLevel; // The 'tier' this program belongs to
-  
-  // Veto Engine Flags
-  vetoConditions: HealthCondition[]; // If a user has ANY of these conditions, the program is BANNED
-  
-  // Scoring Engine Boosts
+  riskLevel: RiskLevel;
+  vetoConditions: HealthCondition[];
   boosts: {
     goals: Partial<Record<Goal, number>>;
     environments: Partial<Record<Environment, number>>;

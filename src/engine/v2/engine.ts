@@ -1,6 +1,6 @@
 import { PROGRAM_LIBRARY } from './programs';
-import { CONDITION_RISK_MAP } from './types';
-import type { SurveyInputV2, ProgramScore, RiskLevel, Goal, Environment, PreferenceLevel } from './types';
+import { CONDITION_RISK_MAP, CONDITION_MODIFIER_MAP } from './types';
+import type { SurveyInputV2, ProgramScore, RiskLevel, Goal, Environment, ModifierTag } from './types';
 
 const RISK_PRIORITY: Record<RiskLevel, number> = {
   'BLACK': 4,
@@ -9,7 +9,45 @@ const RISK_PRIORITY: Record<RiskLevel, number> = {
   'GREEN': 1
 };
 
+// Exercise Swap Table (Section 6)
+const SWAP_RULES: Record<string, Record<string, string>> = {
+  'SQUAT': {
+    'MOD-KNEE': 'High box squat pain-free ROM',
+    'MOD-HIP': 'Sit-to-stand from high box',
+    'MOD-BALANCE': 'Supported sit-to-stand holding rail/TRX/cable',
+    'MOD-DECONDITIONED': 'Bodyweight sit-to-stand from high box',
+    'MOD-MACHINE-ONLY': 'Leg press',
+  },
+  'LUNGE': {
+    'MOD-KNEE': 'Leg press split stance not required',
+    'MOD-HIP': 'Glute bridge or leg press',
+    'MOD-BALANCE': 'Supported split squat hold or remove',
+  },
+  'HINGE': {
+    'MOD-LOWBACK': 'Glute bridge',
+    'MOD-BALANCE': 'Glute bridge or cable pull-through supported',
+    'MOD-HIP': 'Glute bridge',
+    'MOD-MACHINE-ONLY': 'Cable pull-through or bridge'
+  },
+  'PUSH_HORIZONTAL': {
+    'MOD-SHOULDER': 'Chest press machine neutral/pain-free range',
+    'MOD-BEGINNER': 'Chest press machine',
+  },
+  'CORE': {
+    'MOD-NO-FLOOR': 'Seated march + bracing',
+    'MOD-DIZZINESS': 'Seated anti-rotation hold'
+  },
+  'CARDIO': {
+    'MOD-CARDIOLOW': 'Recumbent bike 5–10 min easy',
+    'MOD-BALANCE': 'Recumbent bike or supervised treadmill only',
+    'MOD-KNEE': 'Recumbent bike',
+  }
+};
+
 export function runHeuristicTriage(input: SurveyInputV2): ProgramScore[] {
+  const modifiers = new Set<ModifierTag>();
+  const explainLog: string[] = [];
+
   // --- 1. DETERMINE HIGHEST TRIGGERED RISK LEVEL ---
   let userRisk: RiskLevel = 'GREEN';
   input.conditions.forEach(c => {
@@ -19,30 +57,67 @@ export function runHeuristicTriage(input: SurveyInputV2): ProgramScore[] {
     }
   });
 
-  // --- 2. THE BLACK STOP GATE ---
-  // If the user triggers a BLACK level condition, return no programs (triggers UI referral)
-  if (userRisk === ('BLACK' as RiskLevel)) {
-    return [];
+  // --- 2. INTEGRATE FUNCTIONAL SAFETY GATING (March 26th Logic) ---
+  const isHardStop = input.doctorSaysSupervision || input.chestPainRecent || input.uncontrolledConditions || 
+                     input.recentSurgeryNotCleared || input.repeatedFallsInjury || input.severePainDaily || 
+                     input.neuroConditionUnchecked;
+
+  if (isHardStop) {
+    userRisk = 'BLACK';
+    modifiers.add('REFERRAL-GP');
+    explainLog.push("Triggered Hard Stop Medical referral.");
   }
 
-  // --- 3. FILTER LIBRARY TO ACTIVE TIER ---
-  // A user only sees programs at their specific risk level (or below if specified)
+  // Functional Overrides
+  if (userRisk !== 'BLACK') {
+    if (input.walkingAid || input.fallsHistory === 'TWO_OR_INJURY' || input.unsteadyGait) {
+      if (RISK_PRIORITY['RED'] > RISK_PRIORITY[userRisk]) userRisk = 'RED'; // Force higher safety
+      modifiers.add('MOD-BALANCE');
+      explainLog.push("Gating Override: Elevated risk pools due to balance/walking aid.");
+    }
+    if (input.dizziness || input.fallsHistory === 'ONE_NO_INJURY' || input.chairRiseDifficulty) {
+      if (RISK_PRIORITY['AMBER'] > RISK_PRIORITY[userRisk]) userRisk = 'AMBER';
+      modifiers.add('MOD-BALANCE');
+      explainLog.push("Gating Override: Amber tier pool forced for stability safety.");
+    }
+    if (input.breathlessLightActivity) {
+      if (RISK_PRIORITY['RED'] > RISK_PRIORITY[userRisk]) userRisk = 'RED';
+      modifiers.add('MOD-CARDIOLOW');
+      explainLog.push("Gating Override: Red tier pool forced due to light-activity breathlessness.");
+    }
+  }
+
+  // --- 3. THE BLACK STOP GATE ---
+  if (userRisk === 'BLACK') {
+    return [{
+       code: 'P-REF-RED',
+       name: 'Clinical Referral Required',
+       trainerizeId: 'tz_ref',
+       riskLevel: 'BLACK',
+       finalScore: 0,
+       banned: true,
+       bannedReasons: ["Hard-stop clinical clinical risk detected."],
+       explainLog: ["Clinical referral required before assignment."],
+       modifiers: Array.from(modifiers),
+       swaps: {}
+    }];
+  }
+
+  // --- 4. FILTER LIBRARY TO ACTIVE TIER ---
   let filteredLibrary = PROGRAM_LIBRARY.filter(p => p.riskLevel === userRisk);
-  
-  // Custom Routing Rules: AMBER users can also safely see RED programs
-  if (userRisk === ('AMBER' as RiskLevel)) {
+  if (userRisk === 'AMBER') {
     const redPrograms = PROGRAM_LIBRARY.filter(p => p.riskLevel === 'RED');
     filteredLibrary = [...filteredLibrary, ...redPrograms];
   }
 
-  // --- 4. EVALUATE FILTERED PROGRAMS ---
+  // --- 5. EVALUATE FILTERED PROGRAMS (Original V2 Scoring) ---
   const scoredPrograms: ProgramScore[] = filteredLibrary.map(prog => {
     let finalScore = 0;
     let banned = false;
     const bannedReasons: string[] = [];
-    const explainLog: string[] = [];
+    const localExplain: string[] = [...explainLog];
 
-    // --- 1. THE VETO GATE (Local Contraindications) ---
+    // Veto Gate
     for (const condition of input.conditions) {
       if (prog.vetoConditions.includes(condition)) {
         banned = true;
@@ -50,44 +125,55 @@ export function runHeuristicTriage(input: SurveyInputV2): ProgramScore[] {
       }
     }
 
-    if (banned) {
-      finalScore = -9999;
-    } else {
-      // --- 2. THE SCORING LOOP ---
-      
-      // Goals
+    if (!banned) {
       for (const goal of input.goals) {
         const pts = prog.boosts.goals[goal as Goal];
         if (pts) {
           finalScore += pts;
-          explainLog.push(`${pts > 0 ? '+' : ''}${pts} Points alignment: ${goal}`);
+          localExplain.push(`${pts > 0 ? '+' : ''}${pts} Points alignment: ${goal}`);
         }
       }
-
-      // Environments
       for (const env of input.environments) {
         const pts = prog.boosts.environments[env as Environment];
         if (pts) {
           finalScore += pts;
-          explainLog.push(`${pts > 0 ? '+' : ''}${pts} Points matching env: ${env}`);
+          localExplain.push(`${pts > 0 ? '+' : ''}${pts} Points matching env: ${env}`);
         }
       }
-
-      // Complexity
-      const cpxPts = prog.boosts.complexity[input.complexity as PreferenceLevel];
+      const cpxPts = prog.boosts.complexity[input.complexity];
       finalScore += cpxPts;
-      explainLog.push(`${cpxPts > 0 ? '+' : ''}${cpxPts} Points for ${input.complexity} Complexity`);
+      localExplain.push(`${cpxPts > 0 ? '+' : ''}${cpxPts} Pts: ${input.complexity} Complexity`);
 
-      // Impact
-      const impPts = prog.boosts.impact[input.impact as PreferenceLevel];
+      const impPts = prog.boosts.impact[input.impact];
       finalScore += impPts;
-      explainLog.push(`${impPts > 0 ? '+' : ''}${impPts} Points for ${input.impact} Impact`);
+      localExplain.push(`${impPts > 0 ? '+' : ''}${impPts} Pts: ${input.impact} Impact`);
 
-      // Reps
-      const repPts = prog.boosts.reps[input.reps as PreferenceLevel];
+      const repPts = prog.boosts.reps[input.reps];
       finalScore += repPts;
-      explainLog.push(`${repPts > 0 ? '+' : ''}${repPts} Points for ${input.reps} Reps`);
+      localExplain.push(`${repPts > 0 ? '+' : ''}${repPts} Pts: ${input.reps} Reps`);
+    } else {
+      finalScore = -9999;
     }
+
+    // --- 6. ATTACH MODIFIERS & SWAPS (Merged Logic) ---
+    const localModifiers = new Set<ModifierTag>(modifiers);
+    input.conditions.forEach(c => {
+      const tags = CONDITION_MODIFIER_MAP[c];
+      if (tags) tags.forEach(t => localModifiers.add(t));
+    });
+    if (input.floorTransferDifficulty) localModifiers.add('MOD-NO-FLOOR');
+    if (input.strengthHistory === 'NONE') localModifiers.add('MOD-BEGINNER');
+
+    const activeSwaps: Record<string, string> = {};
+    Object.keys(SWAP_RULES).forEach(pattern => {
+       const rules = SWAP_RULES[pattern];
+       for (const mod of Array.from(localModifiers)) {
+         if (rules[mod]) {
+           activeSwaps[pattern] = rules[mod];
+           break;
+         }
+       }
+    });
 
     return {
       code: prog.code,
@@ -97,10 +183,11 @@ export function runHeuristicTriage(input: SurveyInputV2): ProgramScore[] {
       finalScore,
       banned,
       bannedReasons,
-      explainLog
+      explainLog: localExplain,
+      modifiers: Array.from(localModifiers),
+      swaps: activeSwaps
     };
   });
 
-  // Sort by score descending
-  return scoredPrograms.sort((a, b) => b.finalScore - a.finalScore);
+  return scoredPrograms.filter(p => !p.banned).sort((a, b) => b.finalScore - a.finalScore);
 }
