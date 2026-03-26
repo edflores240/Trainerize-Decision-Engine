@@ -1,6 +1,6 @@
 import { PROGRAM_LIBRARY } from './programs';
 import { CONDITION_RISK_MAP, CONDITION_MODIFIER_MAP } from './types';
-import type { SurveyInputV2, ProgramScore, RiskLevel, Goal, Environment, ModifierTag } from './types';
+import type { SurveyInputV2, ProgramScore, RiskLevel, Goal, Environment, ModifierTag, HealthCondition } from './types';
 
 const RISK_PRIORITY: Record<RiskLevel, number> = {
   'BLACK': 4,
@@ -87,7 +87,17 @@ export function runHeuristicTriage(input: SurveyInputV2): ProgramScore[] {
     }
   }
 
-  // --- 3. THE BLACK STOP GATE ---
+  // --- 3. APPLY MSK ENTROPY (Section 8: Conflict Sets) ---
+  // If user has 2+ distinct MSK/Joint paints, escalate to AMBER
+  const mskConditions: HealthCondition[] = ['Shoulder Pain', 'Knee Pain', 'Hip Pain', 'Low Back Pain', 'Lumbar Herniation', 'Osteoarthritis'];
+  const mskCount = input.conditions.filter(c => mskConditions.includes(c)).length;
+
+  if (mskCount >= 2 && RISK_PRIORITY['AMBER'] > RISK_PRIORITY[userRisk]) {
+    userRisk = 'AMBER';
+    explainLog.push(`Escalation: ${mskCount} joint pains (Conflict Set) forced AMBER tier.`);
+  }
+
+  // --- 4. THE BLACK STOP GATE ---
   if (userRisk === 'BLACK') {
     return [{
        code: 'P-REF-RED',
@@ -157,6 +167,10 @@ export function runHeuristicTriage(input: SurveyInputV2): ProgramScore[] {
 
     // --- 6. ATTACH MODIFIERS & SWAPS (Merged Logic) ---
     const localModifiers = new Set<ModifierTag>(modifiers);
+    
+    // Rule: 2+ MSK conditions add Manual Review tag
+    if (mskCount >= 2) localModifiers.add('MANUAL-REVIEW');
+    
     input.conditions.forEach(c => {
       const tags = CONDITION_MODIFIER_MAP[c];
       if (tags) tags.forEach(t => localModifiers.add(t));
