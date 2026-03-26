@@ -13,8 +13,6 @@ interface StepCardProps {
   options: Option[];
   selected: string | null;
   onSelect: (value: string) => void;
-  danger?: string[];
-  warning?: string[];
 }
 
 export default function StepCard({
@@ -23,8 +21,6 @@ export default function StepCard({
   options,
   selected,
   onSelect,
-  danger = [],
-  warning = [],
 }: StepCardProps) {
   return (
     <div className="animate-slide-up w-full max-w-lg mx-auto">
@@ -40,8 +36,6 @@ export default function StepCard({
       <div className="space-y-3">
         {options.map((opt) => {
           const isSelected = selected === opt.value;
-          const isDanger = danger.includes(opt.value);
-          const isWarning = warning.includes(opt.value);
 
           return (
             <button
