@@ -1,75 +1,86 @@
 import { runHeuristicTriage } from './src/engine/v2/engine';
 import type { SurveyInputV2 } from './src/engine/v2/types';
 
+const defaultInput: SurveyInputV2 = {
+  walkingAid: false,
+  fallsHistory: 'NONE',
+  chairRiseDifficulty: false,
+  floorTransferDifficulty: false,
+  unsteadyGait: false,
+  dizziness: false,
+  breathlessLightActivity: false,
+  walking10MinContinuous: true,
+  strengthHistory: 'NONE',
+  daysPerWeek: 2,
+  doctorSaysSupervision: false,
+  chestPainRecent: false,
+  uncontrolledConditions: false,
+  recentSurgeryNotCleared: false,
+  repeatedFallsInjury: false,
+  severePainDaily: false,
+  neuroConditionUnchecked: false,
+  conditions: [],
+  environments: ['GYM'],
+  goals: ['GENERAL_STRENGTH'],
+  complexity: 'MED',
+  impact: 'MED',
+  reps: 'MED'
+};
+
 const testCases: { name: string; input: SurveyInputV2 }[] = [
   {
-    name: "Test 1: Healthy Performance (No Injuries + Hypertrophy + Gym + High Impact)",
+    name: "Scenario A: Healthy Active (Green 3-Day)",
     input: {
-      conditions: [],
-      goals: ['HYPERTROPHY', 'ATHLETIC'],
-      environments: ['GYM'],
-      complexity: 'HIGH',
-      impact: 'HIGH',
-      reps: 'LOW'
+      ...defaultInput,
+      strengthHistory: 'HIGH',
+      daysPerWeek: 3
     }
   },
   {
-    name: "Test 2: AMBER Modification (Osteoarthritis + Hypertrophy + Gym)",
+    name: "Scenario B: Falls Risk (Balance Program + Modifiers)",
     input: {
-      conditions: ['Osteoarthritis'],
-      goals: ['HYPERTROPHY'],
-      environments: ['GYM'],
-      complexity: 'HIGH',
-      impact: 'HIGH',
-      reps: 'LOW'
+      ...defaultInput,
+      fallsHistory: 'TWO_OR_INJURY',
+      conditions: ['Shoulder Pain']
     }
   },
   {
-    name: "Test 3: RED Clinical (Heart Condition + Hypertrophy)",
+    name: "Scenario C: Conflict Entropy (2+ Modifiers -> Manual Review)",
     input: {
-      conditions: ['Heart Condition'],
-      goals: ['HYPERTROPHY'],
-      environments: ['GYM'],
-      complexity: 'MED',
-      impact: 'MED',
-      reps: 'MED'
+      ...defaultInput,
+      dizziness: true,
+      walkingAid: true
     }
   },
   {
-    name: "Test 4: BLACK Stop (Undiagnosed Severe Pain)",
+    name: "Scenario D: Black Stop (Chest Pain)",
     input: {
-      conditions: ['Undiagnosed Severe Pain'],
-      goals: ['ATHLETIC'],
-      environments: ['GYM'],
-      complexity: 'HIGH',
-      impact: 'HIGH',
-      reps: 'LOW'
+      ...defaultInput,
+      chestPainRecent: true
     }
   }
 ];
 
 console.log("=========================================");
-console.log("🚀 FITNESS ENGINE V4-TIER VALIDATION");
+console.log("🚀 MARCH 26TH MODIFIER-BASED VALIDATION");
 console.log("=========================================");
 
 testCases.forEach((tc) => {
   console.log(`\n[SCENARIO] -> ${tc.name}`);
   
   const results = runHeuristicTriage(tc.input);
+  const res = results[0];
+
+  console.log(`🏆 TEMPLATE: ${res.name} (${res.code}) [Tier: ${res.riskLevel}]`);
   
-  if (results.length === 0) {
-    console.log("🚨 RESULT: BLACK STOP TRIGGERED. (Referral Required)");
-    console.log("-----------------------------------------");
-    return;
+  if (res.modifiers.length > 0) {
+    console.log(`🏷️  MODIFIERS: ${res.modifiers.join(', ')}`);
+  }
+  
+  if (Object.keys(res.swaps).length > 0) {
+    console.log(`🔄 SWAPS: ${Object.entries(res.swaps).map(([k, v]) => `${k}->${v}`).join(' | ')}`);
   }
 
-  // Find top undisputed winner
-  const winner = results[0];
-  const banned = results.filter(r => r.banned);
-
-  console.log(`🏆 WINNER: ${winner.name} [Code: ${winner.code}] (Points: ${winner.finalScore})`);
-  console.log(`   💡 Score Log: \n      - ${winner.explainLog.slice(0, 3).join('\n      - ')}...`);
-
-  console.log(`\n📦 MATCHES IN TIER: ${results.length} Programs`);
+  console.log(`📜 LOG: ${res.explainLog.join(' -> ')}`);
   console.log("-----------------------------------------");
 });
