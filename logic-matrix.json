@@ -1,0 +1,260 @@
+{
+    "engine_version": "1.2.0",
+    "rules": [
+        {
+            "id": "R001",
+            "priority": 100,
+            "description": "Absolute Medical Stop (Red Flag)",
+            "conditions": {
+                "risk": ["RED", "REFER_OUT"],
+                "modifier": "*",
+                "setting": "*",
+                "goal": "*"
+            },
+            "results": {
+                "program_name": null,
+                "program_code": null,
+                "action_status": "REFERRAL_REQUIRED",
+                "next_step": "TRIGGER_DOCTOR_REFERRAL_WORKFLOW"
+            }
+        },
+        {
+            "id": "R002",
+            "priority": 95,
+            "description": "Amber Risk - Severely Deconditioned / Low Capacity",
+            "conditions": {
+                "risk": "AMBER",
+                "modifier": "LOWCAP",
+                "setting": "*",
+                "goal": "*"
+            },
+            "results": {
+                "program_name": "Health Restoration On-Ramp",
+                "program_code": "AMBER-LOWCAP-V1",
+                "action_status": "REVIEW_REQUIRED",
+                "next_step": "NOTIFY_COACH"
+            }
+        },
+        {
+            "id": "R003",
+            "priority": 94,
+            "description": "Amber Risk - Joint Constraints",
+            "conditions": {
+                "risk": "AMBER",
+                "modifier": "JOINT",
+                "setting": "*",
+                "goal": "*"
+            },
+            "results": {
+                "program_name": "Joint Preservation Track",
+                "program_code": "AMBER-JOINT-REHAB-V1",
+                "action_status": "REVIEW_REQUIRED",
+                "next_step": "NOTIFY_COACH"
+            }
+        },
+        {
+            "id": "R004",
+            "priority": 90,
+            "description": "Amber Risk - Machine Only (Safe to Auto-Assign)",
+            "conditions": {
+                "risk": "AMBER",
+                "modifier": "MACHINE",
+                "setting": "GYM",
+                "goal": "*"
+            },
+            "results": {
+                "program_name": "Safeguarded Machine Track",
+                "program_code": "AMBER-GYM-MACHINES-V1",
+                "action_status": "AUTO_OK",
+                "next_step": "ASSIGN_TRAINERIZE_PROGRAM"
+            }
+        },
+        {
+            "id": "R010",
+            "priority": 85,
+            "description": "Green Path - Joint Modifications (Low Impact)",
+            "conditions": {
+                "risk": "GREEN",
+                "modifier": "JOINT",
+                "setting": "GYM",
+                "goal": ["STRENGTH", "FULL", "STR_MOB"]
+            },
+            "results": {
+                "program_name": "Low-Impact Strength Builder",
+                "program_code": "GRN-GYM-LOW-IMPACT-STR-V1",
+                "action_status": "AUTO_OK",
+                "next_step": "ASSIGN_TRAINERIZE_PROGRAM"
+            }
+        },
+        {
+            "id": "R011",
+            "priority": 84,
+            "description": "Green Path - Joint Modifications (Cardio)",
+            "conditions": {
+                "risk": "GREEN",
+                "modifier": "JOINT",
+                "setting": "*",
+                "goal": "CARDIO"
+            },
+            "results": {
+                "program_name": "LISS Cardio Foundations",
+                "program_code": "GRN-LISS-CARDIO-V1",
+                "action_status": "AUTO_OK",
+                "next_step": "ASSIGN_TRAINERIZE_PROGRAM"
+            }
+        },
+        {
+            "id": "R012",
+            "priority": 80,
+            "description": "Green Path - Balance Deficit Focus",
+            "conditions": {
+                "risk": "GREEN",
+                "modifier": "BALANCE",
+                "setting": "*",
+                "goal": "*"
+            },
+            "results": {
+                "program_name": "Core & Stability Foundation",
+                "program_code": "GRN-STABILITY-CORE-V1",
+                "action_status": "AUTO_OK",
+                "next_step": "ASSIGN_TRAINERIZE_PROGRAM"
+            }
+        },
+        {
+            "id": "R020",
+            "priority": 70,
+            "description": "Home Setup - Strength & Hypertrophy",
+            "conditions": {
+                "risk": "GREEN",
+                "modifier": "STANDARD",
+                "setting": "HOME",
+                "goal": ["STRENGTH", "FULL"]
+            },
+            "results": {
+                "program_name": "Home Dumbbell Hypertrophy",
+                "program_code": "GRN-HOME-DB-STR-V1",
+                "action_status": "AUTO_OK",
+                "next_step": "ASSIGN_TRAINERIZE_PROGRAM"
+            }
+        },
+        {
+            "id": "R021",
+            "priority": 69,
+            "description": "Home Setup - Mobility Focus",
+            "conditions": {
+                "risk": "GREEN",
+                "modifier": "STANDARD",
+                "setting": "HOME",
+                "goal": "MOBILITY"
+            },
+            "results": {
+                "program_name": "Home Yoga & Mobility",
+                "program_code": "GRN-HOME-YOGA-MOB-V1",
+                "action_status": "AUTO_OK",
+                "next_step": "ASSIGN_TRAINERIZE_PROGRAM"
+            }
+        },
+        {
+            "id": "R022",
+            "priority": 68,
+            "description": "Home Setup - Cardio Output",
+            "conditions": {
+                "risk": "GREEN",
+                "modifier": "STANDARD",
+                "setting": "HOME",
+                "goal": "CARDIO"
+            },
+            "results": {
+                "program_name": "Home HIIT Conditioning",
+                "program_code": "GRN-HOME-HIIT-V1",
+                "action_status": "AUTO_OK",
+                "next_step": "ASSIGN_TRAINERIZE_PROGRAM"
+            }
+        },
+        {
+            "id": "R030",
+            "priority": 60,
+            "description": "Gym Setup - Pure Strength",
+            "conditions": {
+                "risk": "GREEN",
+                "modifier": "STANDARD",
+                "setting": "GYM",
+                "goal": "STRENGTH"
+            },
+            "results": {
+                "program_name": "Gym Hypertrophy Program",
+                "program_code": "GRN-GYM-HYPERTROPHY-V1",
+                "action_status": "AUTO_OK",
+                "next_step": "ASSIGN_TRAINERIZE_PROGRAM"
+            }
+        },
+        {
+            "id": "R031",
+            "priority": 59,
+            "description": "Gym Setup - Full Body / Strength & Mobility",
+            "conditions": {
+                "risk": "GREEN",
+                "modifier": "STANDARD",
+                "setting": "GYM",
+                "goal": ["FULL", "STR_MOB"]
+            },
+            "results": {
+                "program_name": "Functional Athlete Track",
+                "program_code": "GRN-GYM-FUNC-ATHLETE-V1",
+                "action_status": "AUTO_OK",
+                "next_step": "ASSIGN_TRAINERIZE_PROGRAM"
+            }
+        },
+        {
+            "id": "R032",
+            "priority": 58,
+            "description": "Gym Setup - Pure Cardio",
+            "conditions": {
+                "risk": "GREEN",
+                "modifier": "STANDARD",
+                "setting": "GYM",
+                "goal": "CARDIO"
+            },
+            "results": {
+                "program_name": "Gym Endurance Builder",
+                "program_code": "GRN-GYM-ENDURANCE-V1",
+                "action_status": "AUTO_OK",
+                "next_step": "ASSIGN_TRAINERIZE_PROGRAM"
+            }
+        },
+        {
+            "id": "R040",
+            "priority": 50,
+            "description": "Group Class - General Fitness",
+            "conditions": {
+                "risk": "GREEN",
+                "modifier": "STANDARD",
+                "setting": "CLASS",
+                "goal": "*"
+            },
+            "results": {
+                "program_name": "Group Class Integration Phase",
+                "program_code": "GRN-CLASS-PASSTHROUGH-V1",
+                "action_status": "AUTO_OK",
+                "next_step": "ASSIGN_TRAINERIZE_PROGRAM"
+            }
+        },
+        {
+            "id": "R100",
+            "priority": 0,
+            "description": "Global Fallback (Edge Cases)",
+            "conditions": {
+                "risk": "*",
+                "modifier": "*",
+                "setting": "*",
+                "goal": "*"
+            },
+            "results": {
+                "program_name": "Custom Coach Programming",
+                "program_code": null,
+                "action_status": "REVIEW_REQUIRED",
+                "next_step": "FALLBACK_REVIEW"
+            }
+        }
+    ]
+}

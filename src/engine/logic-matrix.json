@@ -1,0 +1,355 @@
+{
+  "engine_version": "1.2.0",
+  "rules": [
+    {
+      "id": "R100",
+      "priority": 100,
+      "description": "MEDICAL VETO: Hard Stop for Referral",
+      "conditions": {
+        "risk": [
+          "RED",
+          "REFER_OUT"
+        ],
+        "modifier": "*",
+        "setting": "*",
+        "goal": "*"
+      },
+      "results": {
+        "action_status": "REFERRAL_REQUIRED",
+        "program_code": "MED_HOLD",
+        "program_name": "Physician Clearance Required",
+        "next_step": "TRIGGER_DOCTOR_REFERRAL_WORKFLOW"
+      }
+    },
+    {
+      "id": "R095",
+      "priority": 95,
+      "description": "CLASS VETO (Amber): Collapse to Administered Class",
+      "conditions": {
+        "risk": "AMBER",
+        "modifier": "*",
+        "setting": "CLASS",
+        "goal": "*"
+      },
+      "results": {
+        "action_status": "REVIEW_REQUIRED",
+        "program_code": "CLASS_PATHWAY_AMB",
+        "program_name": "Studio Class Router (Monitored)",
+        "next_step": "NOTIFY_COACH"
+      }
+    },
+    {
+      "id": "R094",
+      "priority": 94,
+      "description": "CLASS VETO (Green): Collapse to Standard Class",
+      "conditions": {
+        "risk": "GREEN",
+        "modifier": "*",
+        "setting": "CLASS",
+        "goal": "*"
+      },
+      "results": {
+        "action_status": "AUTO_OK",
+        "program_code": "CLASS_PATHWAY_GRN",
+        "program_name": "Studio Class Router (Independent)",
+        "next_step": "ASSIGN_TRAINERIZE_PROGRAM"
+      }
+    },
+    {
+      "id": "R090",
+      "priority": 90,
+      "description": "COLLAPSE: Low Cap Beginner (Overrides Setting & Goal)",
+      "conditions": {
+        "risk": "GREEN",
+        "modifier": "LOWCAP",
+        "setting": "*",
+        "goal": "*"
+      },
+      "results": {
+        "action_status": "AUTO_OK",
+        "program_code": "GRN_LOWCAP_BASE",
+        "program_name": "Absolute Beginner Foundation",
+        "next_step": "ASSIGN_TRAINERIZE_PROGRAM"
+      }
+    },
+    {
+      "id": "R085",
+      "priority": 85,
+      "description": "COLLAPSE: Green Joint-Friendly Gym",
+      "conditions": {
+        "risk": "GREEN",
+        "modifier": "JOINT",
+        "setting": "GYM",
+        "goal": "*"
+      },
+      "results": {
+        "action_status": "AUTO_OK",
+        "program_code": "GRN_JOINT_GYM",
+        "program_name": "Joint-Friendly Gym Protocol",
+        "next_step": "ASSIGN_TRAINERIZE_PROGRAM"
+      }
+    },
+    {
+      "id": "R084",
+      "priority": 84,
+      "description": "COLLAPSE: Green Joint-Friendly Home",
+      "conditions": {
+        "risk": "GREEN",
+        "modifier": "JOINT",
+        "setting": "HOME",
+        "goal": "*"
+      },
+      "results": {
+        "action_status": "AUTO_OK",
+        "program_code": "GRN_JOINT_HOME",
+        "program_name": "Joint-Friendly Home Protocol",
+        "next_step": "ASSIGN_TRAINERIZE_PROGRAM"
+      }
+    },
+    {
+      "id": "R083",
+      "priority": 83,
+      "description": "COLLAPSE: Green Balance Gym",
+      "conditions": {
+        "risk": "GREEN",
+        "modifier": "BALANCE",
+        "setting": "GYM",
+        "goal": "*"
+      },
+      "results": {
+        "action_status": "AUTO_OK",
+        "program_code": "GRN_BAL_GYM",
+        "program_name": "Stability & Core Gym Focus",
+        "next_step": "ASSIGN_TRAINERIZE_PROGRAM"
+      }
+    },
+    {
+      "id": "R082",
+      "priority": 82,
+      "description": "COLLAPSE: Green Balance Home",
+      "conditions": {
+        "risk": "GREEN",
+        "modifier": "BALANCE",
+        "setting": "HOME",
+        "goal": "*"
+      },
+      "results": {
+        "action_status": "AUTO_OK",
+        "program_code": "GRN_BAL_HOME",
+        "program_name": "Stability & Core Home Focus",
+        "next_step": "ASSIGN_TRAINERIZE_PROGRAM"
+      }
+    },
+    {
+      "id": "R070",
+      "priority": 70,
+      "description": "COLLAPSE: Amber Constrained Gym (Joint/LowCap/Balance)",
+      "conditions": {
+        "risk": "AMBER",
+        "modifier": [
+          "JOINT",
+          "LOWCAP",
+          "BALANCE"
+        ],
+        "setting": "GYM",
+        "goal": "*"
+      },
+      "results": {
+        "action_status": "REVIEW_REQUIRED",
+        "program_code": "AMB_CONSTRAINED_GYM",
+        "program_name": "Amber Modified Gym (Coach Monitored)",
+        "next_step": "NOTIFY_COACH"
+      }
+    },
+    {
+      "id": "R069",
+      "priority": 69,
+      "description": "COLLAPSE: Amber Constrained Home",
+      "conditions": {
+        "risk": "AMBER",
+        "modifier": [
+          "JOINT",
+          "LOWCAP",
+          "BALANCE"
+        ],
+        "setting": "HOME",
+        "goal": "*"
+      },
+      "results": {
+        "action_status": "REVIEW_REQUIRED",
+        "program_code": "AMB_CONSTRAINED_HOME",
+        "program_name": "Amber Modified Home (Coach Monitored)",
+        "next_step": "NOTIFY_COACH"
+      }
+    },
+    {
+      "id": "R060",
+      "priority": 60,
+      "description": "COLLAPSE: Amber Standard Gym",
+      "conditions": {
+        "risk": "AMBER",
+        "modifier": [
+          "STANDARD",
+          "MACHINE"
+        ],
+        "setting": "GYM",
+        "goal": "*"
+      },
+      "results": {
+        "action_status": "REVIEW_REQUIRED",
+        "program_code": "AMB_STD_GYM",
+        "program_name": "Amber Base Gym (Coach Monitored)",
+        "next_step": "NOTIFY_COACH"
+      }
+    },
+    {
+      "id": "R059",
+      "priority": 59,
+      "description": "COLLAPSE: Amber Standard Home",
+      "conditions": {
+        "risk": "AMBER",
+        "modifier": [
+          "STANDARD",
+          "MACHINE"
+        ],
+        "setting": "HOME",
+        "goal": "*"
+      },
+      "results": {
+        "action_status": "REVIEW_REQUIRED",
+        "program_code": "AMB_STD_HOME",
+        "program_name": "Amber Base Home (Coach Monitored)",
+        "next_step": "NOTIFY_COACH"
+      }
+    },
+    {
+      "id": "R050",
+      "priority": 50,
+      "description": "PATHWAY: Green Gym Strength",
+      "conditions": {
+        "risk": "GREEN",
+        "modifier": [
+          "STANDARD",
+          "MACHINE"
+        ],
+        "setting": "GYM",
+        "goal": [
+          "STRENGTH",
+          "FULL"
+        ]
+      },
+      "results": {
+        "action_status": "AUTO_OK",
+        "program_code": "GRN_GYM_STR",
+        "program_name": "Gym Hypertrophy & Strength",
+        "next_step": "ASSIGN_TRAINERIZE_PROGRAM"
+      }
+    },
+    {
+      "id": "R049",
+      "priority": 49,
+      "description": "PATHWAY: Green Gym Cardio",
+      "conditions": {
+        "risk": "GREEN",
+        "modifier": [
+          "STANDARD",
+          "MACHINE"
+        ],
+        "setting": "GYM",
+        "goal": [
+          "CARDIO",
+          "STR_MOB"
+        ]
+      },
+      "results": {
+        "action_status": "AUTO_OK",
+        "program_code": "GRN_GYM_CARDIO",
+        "program_name": "Gym Conditioning & Power",
+        "next_step": "ASSIGN_TRAINERIZE_PROGRAM"
+      }
+    },
+    {
+      "id": "R048",
+      "priority": 48,
+      "description": "PATHWAY: Green Gym Mobility",
+      "conditions": {
+        "risk": "GREEN",
+        "modifier": [
+          "STANDARD",
+          "MACHINE"
+        ],
+        "setting": "GYM",
+        "goal": [
+          "MOBILITY",
+          "BALANCE"
+        ]
+      },
+      "results": {
+        "action_status": "AUTO_OK",
+        "program_code": "GRN_GYM_MOBILITY",
+        "program_name": "Gym Restoration & Mobility",
+        "next_step": "ASSIGN_TRAINERIZE_PROGRAM"
+      }
+    },
+    {
+      "id": "R040",
+      "priority": 40,
+      "description": "PATHWAY: Green Home Strength",
+      "conditions": {
+        "risk": "GREEN",
+        "modifier": "STANDARD",
+        "setting": "HOME",
+        "goal": [
+          "STRENGTH",
+          "FULL"
+        ]
+      },
+      "results": {
+        "action_status": "AUTO_OK",
+        "program_code": "GRN_HOME_STR",
+        "program_name": "Home Bodyweight Strength",
+        "next_step": "ASSIGN_TRAINERIZE_PROGRAM"
+      }
+    },
+    {
+      "id": "R039",
+      "priority": 39,
+      "description": "PATHWAY: Green Home Cardio",
+      "conditions": {
+        "risk": "GREEN",
+        "modifier": "STANDARD",
+        "setting": "HOME",
+        "goal": [
+          "CARDIO",
+          "STR_MOB"
+        ]
+      },
+      "results": {
+        "action_status": "AUTO_OK",
+        "program_code": "GRN_HOME_CARDIO",
+        "program_name": "Home HIIT & Conditioning",
+        "next_step": "ASSIGN_TRAINERIZE_PROGRAM"
+      }
+    },
+    {
+      "id": "R038",
+      "priority": 38,
+      "description": "PATHWAY: Green Home Mobility",
+      "conditions": {
+        "risk": "GREEN",
+        "modifier": "STANDARD",
+        "setting": "HOME",
+        "goal": [
+          "MOBILITY",
+          "BALANCE"
+        ]
+      },
+      "results": {
+        "action_status": "AUTO_OK",
+        "program_code": "GRN_HOME_MOBILITY",
+        "program_name": "Home Flow & Mobility",
+        "next_step": "ASSIGN_TRAINERIZE_PROGRAM"
+      }
+    }
+  ]
+}
