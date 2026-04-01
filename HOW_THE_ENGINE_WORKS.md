@@ -40,19 +40,20 @@ Based on these answers, it assigns a **Risk Tier (Color Code)**. It is essential
 ## Step 3: Heuristic Scoring (The Matchmaker)
 Now that the client is in an approved "Safe Room" (like the Green Tier), they might still have 10 or 15 different safe programs to choose from. How do we pick the right one? 
 
-The engine uses a "Scoring System" to play matchmaker. It compares the client's preferences against every available program in that room.
+The engine uses a "Scoring System" (also known as a Heuristic Engine) to play matchmaker. It compares the client's preferences against the unique "DNA" of every available program in that room.
 
-**What it looks at:**
-- **Goal:** Does the client want Muscle Growth, Weight Loss, or General Strength?
-- **Environment:** Are they training in a full gym, or at home with limited equipment?
-- **Vibe (Complexity):** Do they want a simple, easy-to-follow workout, or an intense, highly complex one?
+**Why do we do this?**
+If a coach has to manually sift through 21+ programs to find the one that fits a client's exact mix of goals, environment, and preferred difficulty, it takes too much time and introduces human bias (e.g., a coach might just assign their "favorite" program by default). The scoring system does the complex, multi-variable math in a split second, presenting an objective, data-driven recommendation.
 
-**What the Engine Does:** 
-It awards "points" to the programs. 
-- If a program is built for the Gym, and the client chose "Gym," the program earns points.
-- If the program is great for "Muscle Growth," and the client wants "Muscle Growth," it earns more points.
+**How do the points work?**
+Each program in the library is pre-programmed with a specific "Point Profile" based on what it is best at.
 
-**The Result:** The engine tallies up all the points and ranks the programs. The program with the highest score is presented to the coach as the clear, objective "Best Fit." There is no guessing.
+- **Goals (+10 to +25 points):** The biggest driver of the score. If a client wants "Muscle Growth" and a program is specifically a Hypertrophy program, it earns a massive +25 points. But an endurance program might earn 0 points for that same goal.
+- **Environment (+10 to +20 points):** A critical practical filter. If a client selects "Home," the engine awards major points (+20) to programs designed with minimal equipment. If a heavy barbell program was evaluated for that same "Home" client, it wouldn't earn these points, effectively pushing it down the list.
+- **The "Vibe Check" (Complexity, Impact, & Reps):** This fine-tunes the match based on the client's preferred training style.
+  - If a client wants a **Simple (Low Complexity)** workout, a straightforward machine circuit gets +10 points. However, a highly complex Olympic lifting program might actually receive **negative points (-10)** for that same client to actively discourage a bad match.
+
+**The Result:** The engine tallies up all the points—adding boosts for perfect alignments and subtracting points for mismatches. It ranks the programs from highest to lowest score. The program with the highest score is presented to the coach as the clear, objective "Best Fit." There is no guessing.
 
 ---
 
