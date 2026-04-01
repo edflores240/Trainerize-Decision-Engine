@@ -73,9 +73,12 @@ It generates **Modifier Tags** and **Automated Exercise Swaps**.
 ## Putting It All Together: A Quick Example
 
 Let's look at a new client named Sarah.
-1. **Hard Stop Check:** Sarah has no major medical alerts. (She passes).
-2. **Functional Safety:** Sarah reports she gets slightly "breathless on light activity" and hasn't exercised in years. The engine places her in the **AMBER Room** for safety.
-3. **Scoring:** In the Amber Room, the engine looks at Sarah's goal (Weight Loss) and environment (Home). It gives the highest score to the **"Amber 2-Day Home Basics"** program.
-4. **The Swaps:** Sarah noted she has "Low Back Pain." The engine flags this and generates an instruction: *"Swap bent-over rows for supported rows."*
+1. **Hard Stop Check:** Sarah has no major medical alerts (like recent chest pain or un-cleared surgery). She passes.
+2. **Functional Safety:** Sarah reports she experiences occasional **"Positional Dizziness."** The engine immediately intervenes, placing her in the **AMBER Tier** (Supported/Modified pool) for safety and attaching a `MOD-BALANCE` tag to her profile.
+3. **Scoring:** In the Amber Tier, the engine evaluates Sarah's goal (General Strength) and environment (Full Gym). It crunches the numbers and awards the highest heuristic score to the **"AMB_2D_MACHINE_FULL"** (Amber 2-Day Machine Full Body) program, earning points for perfectly matching her goals and environment.
+4. **The Swaps:** Sarah also noted she has **"Knee Pain."** The engine identifies this, attaches the `MOD-KNEE` clinical tag, and checks the Section 6 swap rules to generate automated exercise replacements for her coach: 
+   - *Squat Pattern -> "High box squat pain-free ROM"*
+   - *Lunge Pattern -> "Leg press split stance not required"*
+   - *Cardio -> "Recumbent bike"*
 
-**Final Outcome:** Sarah gets a customized, highly effective plan tailored specifically to her living room, and the coach didn't have to spend two hours figuring out how to program around her bad back. It is safe, effective, and automatic.
+**Final Outcome:** Sarah receives a customized, highly effective plan (`AMB_2D_MACHINE_FULL`) tailored specifically to her gym. It has built-in safety rails for her dizziness (`MOD-BALANCE`) and exact, pre-calculated exercise modifications for her bad knees (`MOD-KNEE`). It is safe, effective, and entirely automatic.
